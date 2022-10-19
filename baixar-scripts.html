@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Baixar Scripts - Sankhya</title>
+    <style>
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        width: 100%;
+        padding: 0;
+        margin: 35px 0;
+        word-wrap: break-word;
+        font: 14px Tahoma;
+      }
+
+      form {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+
+      li {
+        padding-top: 5px;
+      }
+    </style>
+    <script>
+      const hash = window.location.hash;
+    </script>
+  </head>
+  <body>
+    <form onsubmit="onSubmit(event)">
+      <fieldset>
+        <legend>Parâmetros</legend>
+        <table>
+          <thead>
+            <tr></tr>
+            <tr></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="text-align: right">
+                <label for="sgbd">Banco:</label>
+              </td>
+              <td>
+                <select name="sgbd" id="sgbd">
+                  <option value="sqlserver">SQL Server</option>
+                  <option value="oracle">Oracle</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td style="text-align: right">
+                <label for="startVersion">Versão Atual:</label>
+              </td>
+              <td>
+                <input type="number" name="startVersion" id="startVersion" />
+              </td>
+            </tr>
+            <tr>
+              <td style="text-align: right">
+                <label for="endVersion">Versão Requerida:</label>
+              </td>
+              <td>
+                <input type="number" name="endVersion" id="endVersion" />
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2">
+                <div style="margin-top: 5px">
+                  <button type="submit" style="width: 100%; padding: 7px">
+                    Enviar
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </fieldset>
+
+      <div id="response-data" style="width: 100%"></div>
+    </form>
+    <script>
+      // Preencher com um novo proxy se esse deixar de funcionar
+      // https://gist.github.com/jimmywarting/ac1be6ea0297c16c477e17f8fbe51347
+      const corsProxyList = ["https://corsproxy.io/?{url}"];
+
+      function onSubmit(event) {
+        event.preventDefault();
+
+        const $responseData = document.querySelector("#response-data");
+        const formData = new FormData();
+        formData.set("sgbd", document.querySelector("#sgbd").value);
+        formData.set(
+          "startVersion",
+          document.querySelector("#startVersion").value
+        );
+        formData.set("endVersion", document.querySelector("#endVersion").value);
+
+        if (!formData.get("startVersion")) {
+          alert("Digite a versão atual.");
+          return;
+        }
+
+        if (!formData.get("endVersion")) {
+          alert("Digite a versão requerida.");
+          return;
+        }
+
+        const url = `${corsProxyList[0].replace(
+          "{url}",
+          "http://downloads.sankhya.com.br/skwupdates/scripts/"
+        )}`;
+
+        fetch(url, {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (!Object.values(data).length) {
+              $responseData.innerHTML =
+                "<h4>Nenhum arquivo foi encontrado para baixar</h4>";
+              return;
+            }
+
+            let html = "<ul>";
+            for (const versao in data) {
+              const url = new URL(data[versao]);
+
+              html += `<li>Versão <strong>${versao}</strong> (<a href='${url}'>${url.pathname.substring(
+                url.pathname.lastIndexOf("/") + 1,
+                url.pathname.length
+              )}</a>)</li>`;
+            }
+            html += "</ul>";
+
+            $responseData.innerHTML = html;
+          })
+          .catch((err) => {
+            console.error(err);
+
+            $responseData.innerHTML = `
+                <h4>Erro ao executar a requisição: <br/>POST ${url}</h4>
+                <fieldset>
+                    <legend>Detalhes</legend>
+                    ${err.stack.replace(/at/g, "<br/>at")}
+                </fieldset>
+                <p>Verifique o servidor de proxy CORS ou tente buscar os arquivos pela linha de comando <br/>via CURL (Python e Bash Requerido):</p>
+                <pre style='max-width: 500px;'>
+curl --location --request POST 'http://downloads.sankhya.com.br/skwupdates/scripts/' \\
+    --header 'Content-Type: application/x-www-form-urlencoded' \\
+    --data-urlencode 'startVersion=${formData.get("startVersion")}' \\
+    --data-urlencode 'endVersion=${formData.get("endVersion")}' \\
+    --data-urlencode 'sgbd=${formData.get("sgbd")}' | python -m json.tool
+                </pre>
+
+                <h4>Ou faça o download manuamente no endereço:</h4>
+                <a target='_blank' href='https://place.sankhya.com.br/#/downloads/scriptsbanco'>https://place.sankhya.com.br/#/downloads/scriptsbanco</a>
+            `;
+          });
+      }
+    </script>
+  </body>
+</html>
