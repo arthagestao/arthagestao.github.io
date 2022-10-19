@@ -117,9 +117,15 @@
           "http://downloads.sankhya.com.br/skwupdates/scripts/"
         )}`;
 
+        const controller = new AbortController();
+
+        // 5 second timeout:
+        const timeoutId = setTimeout(() => controller.abort('Request timeout'), 5000);
+
         fetch(url, {
           method: "POST",
           body: formData,
+          signal: controller.signal,
         })
           .then((response) => response.json())
           .then((data) => {
@@ -149,7 +155,7 @@
                 <h4>Erro ao executar a requisição: <br/>POST ${url}</h4>
                 <fieldset>
                     <legend>Detalhes</legend>
-                    ${err.stack.replace(/at/g, "<br/>at")}
+                    ${err ? err.stack.replace(/at/g, "<br/>at") : err}
                 </fieldset>
                 <p>Verifique o servidor de proxy CORS ou tente buscar os arquivos pela linha de comando <br/>via CURL (Python e Bash Requerido):</p>
                 <pre style='max-width: 500px;'>
