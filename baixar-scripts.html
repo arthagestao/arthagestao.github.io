@@ -138,6 +138,7 @@
             let html = "<ul>";
             for (const versao in data) {
               const url = new URL(data[versao]);
+              url.protocol = 'https';
 
               html += `<li>Versão <strong>${versao}</strong> (<a href='${url}'>${url.pathname.substring(
                 url.pathname.lastIndexOf("/") + 1,
