@@ -88,7 +88,7 @@
     <script>
       // Preencher com um novo proxy se esse deixar de funcionar
       // https://gist.github.com/jimmywarting/ac1be6ea0297c16c477e17f8fbe51347
-      const corsProxyList = ["https://corsproxy.io/?{url}"];
+      const corsProxyList = ["https://api.allorigins.win/raw?url={url}"];
 
       function onSubmit(event) {
         event.preventDefault();
@@ -114,7 +114,7 @@
 
         const url = `${corsProxyList[0].replace(
           "{url}",
-          "http://downloads.sankhya.com.br/skwupdates/scripts/"
+          encodeURIComponent("http://downloads.sankhya.com.br/skwupdates/scripts/")
         )}`;
 
         const controller = new AbortController();
